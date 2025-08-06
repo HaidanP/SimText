@@ -1,0 +1,1 @@
+The quick brown fox jumps over the lazy dog. This is a test document for plagiarism detection. We need to check if our algorithm works correctly. The system should detect similarities between documents.
