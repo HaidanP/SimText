@@ -1,0 +1,1 @@
+A quick brown fox is jumping over a lazy dog. We are testing our similarity checker. The quick fox shows great agility.
