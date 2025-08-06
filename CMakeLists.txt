@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.10)
-project(SimText VERSION 2.0)
+project(SimText VERSION 2.1)
 
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -13,6 +13,7 @@ add_executable(simtext
     src/text_processor.cpp
     src/similarity_calculator.cpp
     src/shingling.cpp
+    src/document_analyzer.cpp
 )
 
 target_include_directories(simtext PRIVATE include)
@@ -23,6 +24,7 @@ add_executable(test_simtext
     src/text_processor.cpp
     src/similarity_calculator.cpp
     src/shingling.cpp
+    src/document_analyzer.cpp
 )
 
 target_include_directories(test_simtext PRIVATE include)
