@@ -1,26 +1,39 @@
-# 🔍 SimText - Advanced Text Similarity Checker
+# SimText - Text Similarity Checker
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![C++17](https://img.shields.io/badge/C%2B%2B-17-blue.svg)](https://en.wikipedia.org/wiki/C%2B%2B17)
 [![CMake](https://img.shields.io/badge/CMake-3.10+-green.svg)](https://cmake.org/)
 
-SimText is a high-performance command-line tool that compares text files and calculates content similarity using cosine similarity algorithms. Perfect for plagiarism detection, document comparison, and academic integrity checking.
+A command-line tool that compares text files and calculates content similarity using cosine similarity algorithms. Designed for plagiarism detection, document comparison, and academic integrity checking.
 
-## ✨ Features
+## Features
 
-- 🧮 **Cosine Similarity Algorithm**: Mathematical precision for accurate text comparison
-- 🚫 **Smart Stopwords Filtering**: Ignore common words to focus on meaningful content
-- 🔧 **Customizable Stopwords**: Use your own stopwords file for domain-specific filtering
-- 🔤 **Intelligent Text Processing**: Case-insensitive with automatic punctuation handling
-- ⚡ **Fast Performance**: Optimized C++ implementation for quick results
-- 📊 **Clear Output**: Easy-to-understand percentage-based similarity scores
+### Algorithms
+- **Cosine Similarity**: Traditional vector-space model comparison
+- **TF-IDF Cosine Similarity**: Weighted comparison emphasizing rare terms
+- **Jaccard Similarity (Character)**: Character-level n-gram comparison
+- **Jaccard Similarity (Word)**: Word-level n-gram comparison
+- **W-Shingling**: Advanced plagiarism detection technique
 
-## 🚀 Quick Start
+### Text Processing
+- Stopwords filtering to focus on meaningful content
+- Customizable stopwords files for domain-specific filtering
+- Case-insensitive text processing with automatic punctuation handling
+- Configurable shingle sizes for n-gram analysis
+
+### Output & Performance
+- Multiple output formats: simple, detailed, JSON
+- Performance timing measurements
+- Similarity threshold filtering
+- Batch processing of multiple files
+- Optimized C++17 implementation with compiler optimizations
+
+## Quick Start
 
 ### Prerequisites
 
-- **C++17** compatible compiler (GCC 7+, Clang 5+, MSVC 2017+)
-- **CMake 3.10** or higher
+- C++17 compatible compiler (GCC 7+, Clang 5+, MSVC 2017+)
+- CMake 3.10 or higher
 
 ### Building from Source
 
@@ -38,51 +51,92 @@ make
 ./simtext --ignore-stopwords ../test1.txt ../test2.txt
 ```
 
-## 📖 Usage
+## Usage
 
 ### Basic Comparison
 ```bash
 ./simtext document1.txt document2.txt
 ```
 
-### With Stopwords Filtering (Recommended)
+### Advanced Algorithm Selection
 ```bash
-./simtext --ignore-stopwords essay1.txt essay2.txt
+# Use TF-IDF for better rare term emphasis
+./simtext --algorithm tfidf essay1.txt essay2.txt
+
+# Use Jaccard similarity for structural comparison
+./simtext --algorithm jaccard-word --shingle-size 4 doc1.txt doc2.txt
+
+# Compare using all algorithms
+./simtext --algorithm all --output detailed paper1.txt paper2.txt
 ```
 
-### Custom Stopwords File
+### Output Formats
 ```bash
-./simtext --ignore-stopwords --stopwords-file custom_stopwords.txt paper1.txt paper2.txt
+# Simple output (default)
+./simtext doc1.txt doc2.txt
+
+# Detailed analysis
+./simtext --algorithm all --output detailed --timing doc1.txt doc2.txt
+
+# JSON output for integration
+./simtext --algorithm all --output json doc1.txt doc2.txt
+```
+
+### Batch Processing
+```bash
+# Compare multiple files (all pairs)
+./simtext --threshold 0.5 *.txt
+
+# Filter results above threshold
+./simtext --algorithm jaccard-char --threshold 0.8 --output simple essay*.txt
 ```
 
 ### Command Line Options
 
-| Option | Description |
-|--------|-------------|
-| `--ignore-stopwords` | Filter out common words (the, and, is, etc.) |
-| `--stopwords-file FILE` | Use custom stopwords from specified file |
+| Option | Description | Default |
+|--------|-------------|---------|
+| `--algorithm ALGO` | Algorithm: cosine, tfidf, jaccard-char, jaccard-word, all | cosine |
+| `--ignore-stopwords` | Filter out common words | false |
+| `--stopwords-file FILE` | Use custom stopwords file | none |
+| `--output FORMAT` | Output format: simple, detailed, json | simple |
+| `--shingle-size N` | N-gram size for Jaccard similarity | 3 |
+| `--threshold N` | Only show results above threshold (0.0-1.0) | 0.0 |
+| `--timing` | Show execution times | false |
 
-## 🔬 How It Works
+## How It Works
 
-### 1. Text Preprocessing
-- **Normalization**: Converts all text to lowercase
-- **Tokenization**: Splits text into individual words
-- **Cleaning**: Removes punctuation and special characters
-- **Filtering**: Optionally removes stopwords for better accuracy
+### Algorithms Explained
 
-### 2. Mathematical Analysis
-- **Term Frequency Calculation**: Computes frequency of each word
-- **Vector Space Model**: Represents documents as high-dimensional vectors
-- **Cosine Similarity**: Calculates angle between document vectors
-- **Percentage Output**: Converts similarity to intuitive 0-100% scale
-
-### 3. Algorithm Formula
+#### 1. Cosine Similarity
+Traditional vector-space model approach:
 ```
 similarity = (A · B) / (||A|| × ||B||)
 ```
-Where A and B are term frequency vectors of the two documents.
+Where A and B are term frequency vectors.
 
-## 📊 Example Results
+#### 2. TF-IDF Cosine Similarity
+Emphasizes rare terms by weighting with inverse document frequency:
+```
+TF-IDF(t,d) = TF(t,d) × log(N/DF(t))
+```
+More effective for larger document collections.
+
+#### 3. Jaccard Similarity (W-Shingling)
+Compares n-gram sets using Jaccard coefficient:
+```
+Jaccard(A,B) = |A ∩ B| / |A ∪ B|
+```
+- **Character-level**: Detects character-level plagiarism
+- **Word-level**: Identifies structural similarities
+
+### Text Preprocessing Pipeline
+1. **Normalization**: Converts to lowercase
+2. **Tokenization**: Splits into words/characters
+3. **Cleaning**: Removes punctuation and special characters
+4. **Filtering**: Optionally removes stopwords
+5. **N-gram Generation**: Creates shingles for Jaccard analysis
+
+## Example Output
 
 ```bash
 $ ./simtext --ignore-stopwords original.txt suspected_copy.txt
@@ -91,21 +145,21 @@ original.txt and suspected_copy.txt
 Similarity score: 87.3%
 ```
 
-### Interpretation Guide
-- **0-30%**: Minimal similarity - likely original content
-- **30-60%**: Moderate similarity - some shared concepts
-- **60-80%**: High similarity - significant overlap detected
-- **80-100%**: Very high similarity - potential plagiarism
+### Interpretation
+- 0-30%: Minimal similarity - likely original content
+- 30-60%: Moderate similarity - some shared concepts
+- 60-80%: High similarity - significant overlap detected
+- 80-100%: Very high similarity - potential plagiarism
 
-## 🎯 Use Cases
+## Use Cases
 
-- **Academic Integrity**: Check student submissions for plagiarism
-- **Content Review**: Compare drafts and revisions
-- **Legal Documents**: Analyze contract similarities
-- **Research**: Compare scientific papers and publications
-- **Journalism**: Verify originality of articles
+- Academic integrity checking
+- Document comparison and revision tracking
+- Legal document analysis
+- Research paper comparison
+- Content originality verification
 
-## 📁 Project Structure
+## Project Structure
 
 ```
 SimText/
@@ -122,8 +176,15 @@ SimText/
 └── build/                 # Build directory (generated)
 ```
 
-## 🧪 Testing
+## Testing
 
+### Running Unit Tests
+```bash
+cd build
+./test_simtext
+```
+
+### Manual Testing
 Create test files and compare them:
 
 ```bash
@@ -131,11 +192,27 @@ Create test files and compare them:
 echo "The quick brown fox jumps over the lazy dog." > test1.txt
 echo "A quick brown fox is jumping over a lazy dog." > test2.txt
 
-# Run comparison
-./simtext --ignore-stopwords test1.txt test2.txt
+# Basic comparison
+./simtext test1.txt test2.txt
+
+# Advanced comparison with all algorithms
+./simtext --algorithm all --output detailed --timing test1.txt test2.txt
 ```
 
-## 🛠️ Advanced Configuration
+### Expected Output
+```
+=== Similarity Analysis ===
+File 1: test1.txt
+File 2: test2.txt
+
+Cosine Similarity:      68.35%
+TF-IDF Similarity:      0.00%
+Jaccard (Character):    50.00%
+Jaccard (Word):         7.50%
+Processing time:        0.18 ms
+```
+
+## Advanced Configuration
 
 ### Custom Stopwords File Format
 Create a text file with one stopword per line:
@@ -155,7 +232,7 @@ SIMILARITY=$(./simtext --ignore-stopwords "$1" "$2" | grep -o '[0-9.]*%')
 echo "Documents are $SIMILARITY similar"
 ```
 
-## 🤝 Contributing
+## Contributing
 
 Contributions are welcome! Please feel free to submit a Pull Request. For major changes, please open an issue first to discuss what you would like to change.
 
@@ -166,23 +243,13 @@ Contributions are welcome! Please feel free to submit a Pull Request. For major 
 4. Push to the branch (`git push origin feature/AmazingFeature`)
 5. Open a Pull Request
 
-## 📝 License
+## License
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
-## 🙏 Acknowledgments
+## Support
 
-- Cosine similarity algorithm implementation
-- Modern C++ best practices
-- CMake build system integration
-
-## 📞 Support
-
-If you have any questions or need help, please:
+For questions or issues:
 - Open an issue on GitHub
 - Check existing issues for solutions
 - Review the documentation
-
----
-
-**Made with ❤️ by developers, for developers**
