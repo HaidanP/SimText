@@ -1,6 +1,7 @@
 #include "text_processor.hpp"
 #include "similarity_calculator.hpp"
 #include "shingling.hpp"
+#include "document_analyzer.hpp"
 #include <iostream>
 #include <fstream>
 #include <string>
@@ -29,6 +30,8 @@ struct Config {
     OutputFormat outputFormat = OutputFormat::SIMPLE;
     int shingleSize = 3;
     bool showTimings = false;
+    bool showAnalysis = false;
+    bool showSentences = false;
     double threshold = 0.0;
     std::vector<std::string> files;
 };
@@ -45,7 +48,7 @@ std::string readFile(const std::string& filename) {
 }
 
 void printUsage() {
-    std::cout << "SimText - Advanced Text Similarity Checker\n\n"
+    std::cout << "SimText - Advanced Text Similarity Checker v2.1\n\n"
               << "Usage: simtext [options] <file1> <file2> [file3...]\n\n"
               << "Options:\n"
               << "  --algorithm ALGO        Algorithm to use: cosine, tfidf, jaccard-char, jaccard-word, all (default: cosine)\n"
@@ -55,10 +58,13 @@ void printUsage() {
               << "  --shingle-size N        Size of shingles for Jaccard similarity (default: 3)\n"
               << "  --threshold N           Only show results above threshold (0.0-1.0)\n"
               << "  --timing                Show execution times\n"
+              << "  --analysis              Show detailed plagiarism analysis and confidence levels\n"
+              << "  --sentence-check        Show sentence-level similarity analysis\n"
               << "  --help, -h              Show this help message\n\n"
               << "Examples:\n"
               << "  simtext doc1.txt doc2.txt\n"
-              << "  simtext --algorithm all --output detailed doc1.txt doc2.txt\n"
+              << "  simtext --algorithm all --output detailed --analysis doc1.txt doc2.txt\n"
+              << "  simtext --analysis --sentence-check essay1.txt essay2.txt\n"
               << "  simtext --algorithm jaccard-word --shingle-size 4 --ignore-stopwords *.txt\n";
 }
 
@@ -107,6 +113,12 @@ Config parseArguments(const std::vector<std::string>& args) {
         else if (args[i] == "--timing") {
             config.showTimings = true;
         }
+        else if (args[i] == "--analysis") {
+            config.showAnalysis = true;
+        }
+        else if (args[i] == "--sentence-check") {
+            config.showSentences = true;
+        }
         else if (args[i][0] != '-') {
             config.files.push_back(args[i]);
         }
@@ -121,6 +133,10 @@ struct SimilarityResult {
     double jaccardChar = 0.0;
     double jaccardWord = 0.0;
     double duration = 0.0;
+    DocumentStats stats1;
+    DocumentStats stats2;
+    SimilarityConfidence confidence;
+    std::vector<std::pair<double, std::string>> sentenceSimilarities;
 };
 
 SimilarityResult calculateSimilarity(const std::string& file1, const std::string& file2, 
@@ -162,6 +178,21 @@ SimilarityResult calculateSimilarity(const std::string& file1, const std::string
         auto shingles1 = ShinglingCalculator::generateWordShingles(tokens1, config.shingleSize);
         auto shingles2 = ShinglingCalculator::generateWordShingles(tokens2, config.shingleSize);
         result.jaccardWord = ShinglingCalculator::calculateJaccardSimilarity(shingles1, shingles2);
+    }
+    
+    // Document analysis
+    if (config.showAnalysis) {
+        auto tokens1 = processor.processText(content1);
+        auto tokens2 = processor.processText(content2);
+        result.stats1 = DocumentAnalyzer::analyzeDocument(content1, tokens1);
+        result.stats2 = DocumentAnalyzer::analyzeDocument(content2, tokens2);
+        result.confidence = DocumentAnalyzer::analyzeSimilarityConfidence(
+            result.cosine, result.tfidf, result.jaccardChar, result.jaccardWord);
+    }
+    
+    // Sentence-level analysis
+    if (config.showSentences) {
+        result.sentenceSimilarities = DocumentAnalyzer::analyzeSentenceSimilarity(content1, content2);
     }
     
     auto end = std::chrono::high_resolution_clock::now();
@@ -225,6 +256,23 @@ void outputResults(const std::string& file1, const std::string& file2,
         if (config.showTimings) {
             std::cout << "Processing time:        " << std::fixed << std::setprecision(2) << result.duration << " ms\n";
         }
+        
+        // Show analysis summary
+        if (config.showAnalysis) {
+            std::cout << "\n" << DocumentAnalyzer::generateAnalysisSummary(
+                result.stats1, result.stats2, result.confidence);
+        }
+        
+        // Show sentence similarities
+        if (config.showSentences && !result.sentenceSimilarities.empty()) {
+            std::cout << "=== HIGH SIMILARITY SENTENCES ===\n";
+            for (size_t i = 0; i < std::min(size_t(5), result.sentenceSimilarities.size()); ++i) {
+                std::cout << "Similarity: " << std::fixed << std::setprecision(1) 
+                          << result.sentenceSimilarities[i].first * 100 << "%\n";
+                std::cout << "Sentence: \"" << result.sentenceSimilarities[i].second << "\"\n\n";
+            }
+        }
+        
         std::cout << "\n";
         
     } else { // SIMPLE
