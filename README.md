@@ -4,7 +4,7 @@
 [![C++17](https://img.shields.io/badge/C%2B%2B-17-blue.svg)](https://en.wikipedia.org/wiki/C%2B%2B17)
 [![CMake](https://img.shields.io/badge/CMake-3.10+-green.svg)](https://cmake.org/)
 
-A command-line tool that compares text files and calculates content similarity using cosine similarity algorithms. Designed for plagiarism detection, document comparison, and academic integrity checking.
+An advanced command-line tool that compares text files and detects plagiarism using multiple similarity algorithms. Features intelligent analysis, confidence scoring, and sentence-level detection for comprehensive academic integrity checking.
 
 ## Features
 
@@ -21,11 +21,19 @@ A command-line tool that compares text files and calculates content similarity u
 - Case-insensitive text processing with automatic punctuation handling
 - Configurable shingle sizes for n-gram analysis
 
+### Analysis & Intelligence
+- **Confidence Level Assessment**: Automatic categorization with interpretation guidelines
+- **Document Statistics**: Word count, sentence analysis, lexical diversity
+- **Sentence-Level Detection**: Identifies paraphrasing and structural similarities
+- **Plagiarism Indicators**: Specific flags and recommendations for educators
+- **Weighted Scoring**: Intelligent combination of multiple algorithms
+
 ### Output & Performance
 - Multiple output formats: simple, detailed, JSON
 - Performance timing measurements
 - Similarity threshold filtering
 - Batch processing of multiple files
+- Comprehensive analysis summaries
 - Optimized C++17 implementation with compiler optimizations
 
 ## Quick Start
@@ -70,6 +78,18 @@ make
 ./simtext --algorithm all --output detailed paper1.txt paper2.txt
 ```
 
+### Plagiarism Analysis
+```bash
+# Comprehensive plagiarism detection with confidence levels
+./simtext --algorithm all --analysis essay1.txt essay2.txt
+
+# Detect paraphrasing with sentence-level analysis
+./simtext --analysis --sentence-check document1.txt document2.txt
+
+# Professional analysis for educators
+./simtext --algorithm all --output detailed --analysis --sentence-check paper1.txt paper2.txt
+```
+
 ### Output Formats
 ```bash
 # Simple output (default)
@@ -102,6 +122,8 @@ make
 | `--shingle-size N` | N-gram size for Jaccard similarity | 3 |
 | `--threshold N` | Only show results above threshold (0.0-1.0) | 0.0 |
 | `--timing` | Show execution times | false |
+| `--analysis` | Show detailed plagiarism analysis and confidence levels | false |
+| `--sentence-check` | Show sentence-level similarity analysis | false |
 
 ## How It Works
 
@@ -209,7 +231,25 @@ Cosine Similarity:      68.35%
 TF-IDF Similarity:      0.00%
 Jaccard (Character):    50.00%
 Jaccard (Word):         7.50%
-Processing time:        0.18 ms
+
+=== ANALYSIS SUMMARY ===
+
+Document Comparison:
+Document 1: 25 words, 3 sentences
+Document 2: 22 words, 3 sentences
+
+Similarity Assessment:
+Confidence Level: Low
+Overall Score: 43.8%
+Interpretation: Low similarity - minimal content overlap
+
+Key Indicators:
+• Likely original content
+• Normal similarity for same topic
+
+=== HIGH SIMILARITY SENTENCES ===
+Similarity: 78.3%
+Sentence: "This is a test document for plagiarism detection"
 ```
 
 ## Advanced Configuration
